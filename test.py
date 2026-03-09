@@ -72,3 +72,4 @@ for atrybut, zysk in sorted(wyniki.items(), key=lambda x: x[1], reverse=True):
 najlepszy= max(wyniki, key = wyniki.get)
 print(f"Najlepszy atrybut(korzen drzewa): {najlepszy}")
 
+
