@@ -1,75 +1,79 @@
 import pandas as pd
 import math
 
-
-df = pd.read_csv("test_pogoda.csv")
+df = pd.read_csv("test_pogoda.csv", index_col=0)
 print(df)
-print("Ilość linij: ", len(df))
+
+print("\nSpojnosc:")
+decision_col = df.columns[-1]
+condition_cols = list(df.columns[:-1])
+konflikty = []
+for a in range(len(df)):
+    for b in range(a + 1, len(df)):
+        wiersz1 = df.iloc[a]
+        wiersz2 = df.iloc[b]
+        warunki_same = all(wiersz1[col] == wiersz2[col] for col in condition_cols)
+        decyzje_inne = wiersz1[decision_col] != wiersz2[decision_col]
+
+        if warunki_same and decyzje_inne:
+            konflikty.append((a, b))
+if len(konflikty) ==0:
+    print("Tablica jest spojna")
+else:
+    print("Tablica nie jest spojna, bo zostal znaleziony konflikt.")
+    for a, b in konflikty:
+        print(f"Wiersze {a} i {b} maja te same wartosci, ale rozne decyzje")
+        print(f"Wiersz {a}: {dict(df.iloc[a])}")
+        print(f"Wiersz {b}: {dict(df.iloc[b])}")
+
+print("\nIlość linij: ", len(df))
 print("Nazwy kolumn: ", df.columns.tolist())
 
-print("Unikalne wartości: ")
+print("\nUnikalne wartości: ")
 for kolumna in df.columns:
-    print(f"{kolumna}: {df[kolumna].unique()}")
+    print(f"{kolumna}: {df[kolumna].unique().tolist()}")
 
-print("Puste komurki: ")
-print(df.isnull().sum())
+print("\nPuste komurki: ")
+for kolumna, liczba in df.isnull().sum().items():
+    print(f"{kolumna}:{liczba}")
 
-print("Ilość decyzji: ")
-print(df["Decyzja"].value_counts())
-
+print("\nRozklad decyzji w procentach: ")
 decyzje = df["Decyzja"].value_counts()
 total = len(df)
-print("Oblicznie entropii: ")
+for klasa, liczba in decyzje.items():
+    procent = round(liczba/total*100, 1)
+    print(f"{klasa}:{liczba} razy ({procent}%)")
+
+print("\nOblicznie entropii: ")
+decyzje = df["Decyzja"].value_counts()
+total = len(df)
 entropia = 0
 for klasa, liczba in decyzje.items():
     p = liczba/total
     entropia -= p*math.log2(p)
-    print(f' {klasa}: {liczba}/{total} = {p:.3f}')
-print(f"Entropia: {entropia:.4f}")
+print(f"Entropia glowna: {round(entropia, 4)}")
 
-print("Zysk informacyjny dla atrybutu pogoda: ")
-for wartosc in df["Pogoda"].unique():
-    podzbior = df[df["Pogoda"] == wartosc]
-    print(f"Pogoda = {wartosc} ({len(podzbior)} wierszy):")
-    print(podzbior["Decyzja"].value_counts().to_string())
+najlepszy_atrybut = None
+najlepszy_zysk = -1
+for kolumna in condition_cols:
+    entropia_atrybutu = 0
+    for wartosc in df[kolumna].unique():
+        podzbior = df[df[kolumna] == wartosc]
+        waga = len(podzbior)/total
 
-print("Obliczanie zysku informatycznego dla pogoda: ")
-entropia_po_podziale = 0
-for wartosc in df["Pogoda"].unique():
-    podzbior = df[df["Pogoda"] == wartosc]
-    waga = len(podzbior)/len(df)
-    e = 0
+    entropia_podzbior = 0
     for klasa, liczba in podzbior["Decyzja"].value_counts().items():
         p = liczba/len(podzbior)
-        if p >0:
-            e -= p*math.log2(p)
-    entropia_po_podziale += waga*e
-    print(f'{wartosc}: waga = {waga:.3f}, entropia={e:.4f}')
+        entropia_podzbior -=p*math.log2(p)
+    entropia_atrybutu += waga*entropia_podzbior
 
-zysk = entropia-entropia_po_podziale
-print(f"Entropia przed podzialem:{entropia:.4f}")
-print(f"Entropia po podziale:{entropia_po_podziale:.4f}")
-print(f"Zysk informacyjny: {zysk:.4f}")
+    zysk = entropia - entropia_atrybutu
+    print(f"{kolumna}:")
+    print(f"Entropia atrybutu: {round(entropia_atrybutu, 4)}")
+    print(f"Zysk informacyjny: {round(zysk, 4)}\n")
 
-print("Zysk informacyjny dla wszystkich atrybutów: ")
-atrybuty = ["Pogoda", "Temperatura", "Wiatr", "Wilgotnosc", "Opady"]
-wyniki ={}
-for atrybut in atrybuty:
-    entropia_po =0
-    for wartosc in df[atrybut].unique():
-        podzbior = df[df[atrybut] == wartosc]
-        waga = len(podzbior)/len(df)
-        e=0
-        for klasa, liczba in podzbior["Decyzja"].value_counts().items():
-            p = liczba/len(podzbior)
-            if p >0:
-                e -= p*math.log2(p)
-            entropia_po += waga*e
-        zysk = entropia - entropia_po
-        wyniki[atrybut] = round(zysk, 4)
-for atrybut, zysk in sorted(wyniki.items(), key=lambda x: x[1], reverse=True):
-    print(f'{atrybut}: {zysk}')
-najlepszy= max(wyniki, key = wyniki.get)
-print(f"Najlepszy atrybut(korzen drzewa): {najlepszy}")
-
+    if zysk > najlepszy_zysk:
+        najlepszy_zysk = zysk
+        najlepszy_atrybut = kolumna
+print(f"Najlepszy atrybut: '{najlepszy_atrybut}' (zysk = {round(najlepszy_zysk, 4)})")
 
