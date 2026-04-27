@@ -77,3 +77,4 @@ for kolumna in condition_cols:
         najlepszy_atrybut = kolumna
 print(f"Najlepszy atrybut: '{najlepszy_atrybut}' (zysk = {round(najlepszy_zysk, 4)})")
 
+
