@@ -25,7 +25,7 @@ else:
     for a, b in konflikty:
         print(f"Wiersze {a} i {b}: {dict(df.iloc[a])} vs {dict(df.iloc[b])}")
 
-#INFORMACJA O TABLICY
+#INFORMACJA O TABLICE
 print("\nIlosc wierszy:", len(df))
 print("Nazwy kolumn: ", df.columns.tolist())
 
@@ -73,7 +73,7 @@ def id3(dane, atrybuty, decision_col, poziom=0):
         return {"lisc": True, "decyzja": decyzja}
 
     if len(atrybuty) == 0:
-        decyzja = dane[decision_col].mode[0]
+        decyzja = dane[decision_col].mode()[0]
         print(f"{wciecie}[LISC - majoryta] Decyzja: {decyzja}")
         return {"lisc": True, "decyzja": decyzja}
 
