@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wyniki analizy - {{filename}}</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+</head>
+<body>
+    <div class="container">
+        <a href="{{url_for('index')}}" class="powrot">&larr; wgraj inny plik</a>
+        <h1>Wyniki analizy: {{filename}}</h1>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="pokazZakladke('tablica', this)">Tablica</button>
+            <button class="tab-btn" onclick="pokazZakladke('drzewo', this)">Drzewo</button>
+            <button class="tab-btn" onclick="pokazZakladke('reguly', this)">Reguły</button>
+        </div>
+
+        <div id="tablica" class="tab-content" style="display: block;">
+            <h2>Wczytana tablica decyzyjna</h2>
+            <div class="table-wrapper">
+                {{table_html | safe}}
+            </div>
+
+            <h2>Spójność tablicy</h2>
+            {% if consistency.is_consistent %}
+                <p class="ok">Tablica jest spójna.</p>
+            {% else %}
+                <p class="error">Tablica nie jest spójna. Znaleziono {{consistency.conflicts | length }} konflikt(ów):</p>
+                <ul>
+                    {% for c in consistency.conflicts %}
+                        <li>Wiersze {{c.a}} i {{c.b}}: {{c.row1}} vs {{c.row2}}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+            <h2>Informacje o tablicy</h2>
+            <p>Liczba wierszy: {{info.row_count}}</p>
+            <p>Kolumny: {{ info.columns | join(", ") }}</p>
+            <h3>Unikalne wartości</h3>
+            <ul>
+                {% for column, values in info.unique_values.items() %}
+                    <li><strong> {{column}}</strong>: {{values | join(", ")}}</li>
+                {% endfor %}
+            </ul>
+
+            <h3>Rozkład decyzji</h3>
+            <ul>
+                {% for row in info.decision_distribution %}
+                    <li>{{row.class_}}: {{row.count}} razy ({{row.percent}}%)</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div id="drzewo" class="tab-content" style="display: none;">
+            <h2>Drzewo decyzyjne</h2>
+            {{ tree_html | safe }}
+        </div>
+
+        <div id="reguly" class="tab-content" style="display: none;">
+            <h2>Reguły decyzyjne</h2>
+            <ol>
+                {% for condition, decision in rules %}
+                    <li>IF {{condition}} THEN Decyzja = {{decision}}</li>
+                {% endfor%}
+            </ol>
+
+            <h2>Statystyka reguł</h2>
+            <p>Liczba reguł: {{stats.rule_count}}</p>
+            <p>Liczba unikalnych: {{stats.unique_count}}</p>
+            <p>Minimalna długość: {{stats.min_length}}</p>
+            <p>Średnia długość: {{stats.avg_length}}</p>
+            <p>Maksymalna długość: {{stats.max_length}}</p>
+        </div>
+    </div>
+
+    <script>
+        function pokazZakladke(id, przycisk) {
+            var bloki = document.querySelectorAll('.tab-content');
+            for (var i = 0; i < bloki.length; i++) {
+                bloki[i].style.display = 'none';
+            }
+
+            var przyciski = document.querySelectorAll('.tab-btn');
+            for (var j = 0; j < przyciski.length; j++) {
+                przyciski[j].classList.remove('active');
+            }
+
+            document.getElementById(id).style.display = 'block';
+            przycisk.classList.add('active');
+        }
+    </script>
+</body>
+</html>

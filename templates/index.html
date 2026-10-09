@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Indykcja reguł decyzyjnych z drzew decyzyjnych</title>
+    <link rel ="stylesheet" href="{{url_for('static', filename='style.css')}}">
+</head>
+<body>
+    <div class="container">
+        <h1>Indukcja reguł decyzyjnych z drzew decyzyjnych</h1>
+        <p>Wgraj plik CSV z tablicą decyzyjną, aby sprawdzić spójność, zbudować drzewo decyzyjne i wygenerować reguły decyzyjne.</p>
+        <form action="{{url_for('analiza')}}" method="post" enctype="multipart/form-data">
+            <input type="file" name="csv_file"accept=".csv" required>
+            <button type="submit">Analizuj</button>
+        </form>
+    </div>
+</body>
+</html>
