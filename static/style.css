@@ -226,3 +226,21 @@ pre {
     overflow-x: auto;
     max-width: 100%;
 }
+
+.alert-error {
+    border: 1px solid #c0392b;
+    color: #c0392b;
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+}
+
+.alert-warning {
+    border: 1px solid #e0a800;
+    color: #7a5c00;
+    padding: 0.6rem 1rem;
+    margin: 1rem 0;
+}
+
+form button {
+    margin-left: 0;
+}

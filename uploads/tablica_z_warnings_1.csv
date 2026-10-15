@@ -1,0 +1,16 @@
+Nr;Kod;Nazwisko;Pomiar1;Pomiar2;Ocena
+1;K01;Kowalski;36,6;120;A
+2;K02;Nowak;36,7;121;A-
+3;K03;Wisniewski;36,8;122;B+
+4;K04;Wojcik;36,9;123;B+
+5;K05;Kaminski;37;124;B-
+6;K06;Lewandowski;37,1;125;C+
+7;K07;Zielinski;37,2;126;C+
+8;K08;Szymanski;37,3;127;C-
+9;K09;Mozniak;37,4;128;D+
+10;K10;Dabrowski;37,5;129;D+
+11;K11;Kozlowski;37,6;130;F
+12;K12;Jankowski;37,7;120;A
+13;K13;Mazur;36,6;121;B
+14;K14;Kwiatowski;36,7;122;C
+15;K15;Krawczyk;36,8;123;D

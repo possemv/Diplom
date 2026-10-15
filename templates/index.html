@@ -2,17 +2,41 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Indykcja reguł decyzyjnych z drzew decyzyjnych</title>
-    <link rel ="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <title>Indukcja reguł decyzyjnych z drzew decyzyjnych</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
 </head>
 <body>
     <div class="container">
         <h1>Indukcja reguł decyzyjnych z drzew decyzyjnych</h1>
         <p>Wgraj plik CSV z tablicą decyzyjną, aby sprawdzić spójność, zbudować drzewo decyzyjne i wygenerować reguły decyzyjne.</p>
-        <form action="{{url_for('analiza')}}" method="post" enctype="multipart/form-data">
-            <input type="file" name="csv_file"accept=".csv" required>
-            <button type="submit">Analizuj</button>
+
+        {% if problems %}
+            <div class="alert-error">
+                <strong>Nie można przetworzyć pliku:</strong>
+                <ul>
+                    {% for problem in problems %}
+                        <li>{{ problem }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form action="{{url_for('wybierz')}}" method="post" enctype="multipart/form-data">
+            <p>
+                <input type="file" name="csv_file" accept=".csv" required>
+            </p>
+            <p>
+                <label>
+                    <input type="checkbox" name="has_index" value="1" checked>
+                    Pierwsza kolumna zawiera nazwy lub numery wierszy (np. Dzien1)
+                </label>
+            </p>
+            <p>
+                <button type="submit">Dalej</button>
+            </p>
         </form>
+
+        <p><small>Wymagania: pierwszy wiersz pliku to nazwy kolumn, separator to przecinek lub średnik, maksymalnie 1000 wierszy i 2 MB. Tablica nie może mieć pustych komórek.</small></p>
     </div>
 </body>
 </html>

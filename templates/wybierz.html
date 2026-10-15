@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wybór kolumny decyzji</title>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+</head>
+<body>
+    <div class="container">
+        <a href="{{url_for('index')}}" class="powrot">&larr; wgraj inny plik</a>
+        <h1>Wybierz kolumnę decyzji</h1>
+        <p>Plik: <strong>{{ filename }}</strong>. Poniżej widać pierwsze wiersze tablicy.</p>
+
+        <div class="table-wrapper">
+            {{ preview | safe }}
+        </div>
+
+        {% if problems %}
+            <div class="alert-error">
+                <ul>
+                    {% for problem in problems %}
+                        <li>{{ problem }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <form action="{{url_for('analiza')}}" method="post">
+            <input type="hidden" name="filename" value="{{ filename }}">
+            <input type="hidden" name="has_index" value="{{ 1 if has_index else 0 }}">
+
+            <p>
+                <label for="decision_col">Kolumna decyzji:</label>
+                <select name="decision_col" id="decision_col">
+                    {% for col in columns %}
+                        <option value="{{ col }}" {% if loop.last %}selected{% endif %}>{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </p>
+            <p>
+                <button type="submit">Analizuj</button>
+            </p>
+        </form>
+    </div>
+</body>
+</html>

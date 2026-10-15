@@ -1,0 +1,8 @@
+Nr;Pogoda;Temperatura;Wiatr;Wilgotnosc;Decyzja
+dzien1;;Goraca;Slaby;Wysoka;Nie
+dzien2;Slonieczne;;Silny;Wysoka;Nie
+dzien3;Zachmurzenie;Goraca;;Wysoka;Tak
+dzien4;Deszcz;Lagodna;Slaby;;Tak
+dzien5;Deszcz;Chlodna;Slaby;Normalna;
+dzien6;Deszcz;Chlodna;Silny;;Nie
+;Slonieczne;Lagodna;SIlny;Normalna;Tak

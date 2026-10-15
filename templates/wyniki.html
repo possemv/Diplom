@@ -10,6 +10,17 @@
         <a href="{{url_for('index')}}" class="powrot">&larr; wgraj inny plik</a>
         <h1>Wyniki analizy: {{filename}}</h1>
 
+        {% if warnings %}
+            <div class="alert-warning">
+                <strong>Uwaga:</strong>
+                <ul>
+                    {% for w in warnings %}
+                        <li>{{ w }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
         <div class="tabs">
             <button class="tab-btn active" onclick="pokazZakladke('tablica', this)">Tablica</button>
             <button class="tab-btn" onclick="pokazZakladke('drzewo', this)">Drzewo</button>
@@ -37,10 +48,11 @@
             <h2>Informacje o tablicy</h2>
             <p>Liczba wierszy: {{info.row_count}}</p>
             <p>Kolumny: {{ info.columns | join(", ") }}</p>
+            <p>Kolumna decyzji: <strong>{{ decision_col }}</strong></p>
             <h3>Unikalne wartości</h3>
             <ul>
                 {% for column, values in info.unique_values.items() %}
-                    <li><strong> {{column}}</strong>: {{values | join(", ")}}</li>
+                    <li><strong>{{column}}</strong>: {{values | join(", ")}}</li>
                 {% endfor %}
             </ul>
 
@@ -55,6 +67,11 @@
         <div id="drzewo" class="tab-content" style="display: none;">
             <h2>Drzewo decyzyjne</h2>
             {{ tree_html | safe }}
+
+            <h3>Statystyka drzewa</h3>
+            <p>Węzły wewnętrzne: {{ tree_stats.internal }}</p>
+            <p>Liście: {{ tree_stats.leaves }}</p>
+            <p>Głębokość drzewa: {{ tree_stats.depth }}</p>
         </div>
 
         <div id="reguly" class="tab-content" style="display: none;">
@@ -62,7 +79,7 @@
             <ol>
                 {% for condition, decision in rules %}
                     <li>IF {{condition}} THEN Decyzja = {{decision}}</li>
-                {% endfor%}
+                {% endfor %}
             </ol>
 
             <h2>Statystyka reguł</h2>
