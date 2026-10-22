@@ -4,6 +4,7 @@ import pandas as pd
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
 
+import db
 import id3 as logic
 
 app = Flask(__name__)
@@ -13,8 +14,26 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 MAX_ROWS = 1000
 
+try:
+    db.create_tables()
+except Exception as e:
+    print('Brak połączenia z bazą danych:', e)
+
+def get_recent():
+    #zwraca (lista ostatnich tabel, czy był błąd bazy)
+    try:
+        return db.get_recent_tables(6), False
+    except Exception as e:
+        print('Nie udało się pobrać listy z bazy:', e)
+        return [], True
+
+def render_index(problems=None):
+    recent_tables, db_error = get_recent()
+    return render_template('index.html', problems=problems,
+                           recent_tables=recent_tables, db_error=db_error)
+
 def show_problems(problems):
-    return render_template('index.html', problems=problems)
+    return render_index(problems)
 
 def make_table_html(df, has_index):
     if has_index:
@@ -49,13 +68,20 @@ def show_select_page(filename, has_index, df, problems=None):
         problems=problems,
     )
 
+def save_to_history(filename, has_index, decision_col):
+    #jeśli baza nie działa, analiza i tak ma się udać - tylko wypisujemy błąd w konsoli
+    try:
+        db.save_table(filename, has_index, decision_col)
+    except Exception as e:
+        print('Nie udało się zapisać do bazy:', e)
+
 @app.errorhandler(413)
 def file_too_big(error):
     return show_problems(['Plik jest za duży (maksymalnie 2 MB).']), 413
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_index()
 
 @app.route('/wybierz', methods=['POST'])
 def wybierz():
@@ -77,12 +103,7 @@ def wybierz():
 
     return show_select_page(filename, has_index, df)
 
-@app.route('/analiza', methods=['POST'])
-def analiza():
-    filename = secure_filename(request.form.get('filename', ''))
-    decision_col = request.form.get('decision_col', '')
-    has_index = request.form.get('has_index') == '1'
-
+def run_analysis(filename, has_index, decision_col):
     df, problems = load_and_check(filename, has_index)
     if len(problems) > 0:
         return show_problems(problems)
@@ -111,13 +132,15 @@ def analiza():
         #drzewo
         tree_html = "<ul class='tree'>" + logic.tree_to_html(tree) + "</ul>"
         #ostrzeżenia
-        warnings = logic.get_warnings(df, condition_cols, decision_col)
+        warnings = logic.get_warnings(df, condition_cols)
         if not consistency['is_consistent']:
             warnings.append('Tablica jest niespójna, drzewo może dawać niejednoznaczne decyzje.')
     except Exception:
         app.logger.exception('Błąd podczas analizy')
         return show_select_page(filename, has_index, df,
                                 ['Wystąpił błąd podczas analizy. Spróbuj wybrać inną kolumnę decyzji.'])
+
+    save_to_history(filename, has_index, decision_col)
 
     return render_template(
         'wyniki.html',
@@ -133,6 +156,27 @@ def analiza():
         stats=stats,
         warnings=warnings,
     )
+
+@app.route('/analiza', methods=['POST'])
+def analiza():
+    filename = secure_filename(request.form.get('filename', ''))
+    decision_col = request.form.get('decision_col', '')
+    has_index = request.form.get('has_index') == '1'
+    return run_analysis(filename, has_index, decision_col)
+
+@app.route('/ostatnia/<int:table_id>', methods=['POST'])
+def ostatnia(table_id):
+    #analiza tabeli wybranej z listy ostatnich (ustawienia bierzemy z bazy)
+    try:
+        record = db.get_table(table_id)
+    except Exception as e:
+        print('Nie udało się pobrać tabeli z bazy:', e)
+        return show_problems(['Nie udało się połączyć z bazą danych.'])
+
+    if record is None:
+        return show_problems(['Nie znaleziono tej tabeli w bazie.'])
+
+    return run_analysis(record['filename'], record['has_index'], record['decision_col'])
 
 if __name__ == '__main__':
     app.run(debug=True)

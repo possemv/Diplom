@@ -37,6 +37,25 @@
         </form>
 
         <p><small>Wymagania: pierwszy wiersz pliku to nazwy kolumn, separator to przecinek lub średnik, maksymalnie 1000 wierszy i 2 MB. Tablica nie może mieć pustych komórek.</small></p>
+
+        <div class="recent">
+            <h2>Ostatnie tabele</h2>
+
+            {% if db_error %}
+                <p class="muted">Baza danych jest niedostępna, więc lista ostatnich tabel nie może być pokazana.</p>
+            {% elif recent_tables %}
+                {% for t in recent_tables %}
+                    <form action="{{ url_for('ostatnia', table_id=t.id) }}" method="post">
+                        <button type="submit" class="recent-item">
+                            <span class="recent-name">{{ t.filename }}</span>
+                            <span class="recent-meta">kolumna decyzji: {{ t.decision_col }} &middot; {{ t.last_used.strftime('%d.%m.%Y %H:%M') }}</span>
+                        </button>
+                    </form>
+                {% endfor %}
+            {% else %}
+                <p class="muted">Brak zapisanych tabel. Po pierwszej analizie pojawi się tutaj lista.</p>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>

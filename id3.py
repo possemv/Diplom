@@ -4,8 +4,6 @@ from html import escape
 import numpy as np
 import pandas as pd
 
-MAX_VALUES = 10
-
 def load_table(file_path, has_index=True):
     if has_index:
         index_col = 0
@@ -36,8 +34,6 @@ def validate_table(df, max_rows):
 
     if len(df.columns) < 2:
         problems.append("Tablica musi mieć co najmniej 2 kolumny (warunki i decyzję).")
-    if len(df) < 2:
-        problems.append("Tablica musi mieć co najmniej 2 wiersze.")
     if len(df) > max_rows:
         problems.append("Tablica ma za dużo wierszy (" + str(len(df)) + "). Maksymalnie: " + str(max_rows) + ".")
 
@@ -80,21 +76,16 @@ def get_condition_cols(df, decision_col):
     return condition_cols
 
 
-def get_warnings(df, condition_cols, decision_col):
+def get_warnings(df, condition_cols):
     warnings = []
     for col in condition_cols:
-        count = df[col].nunique()
-        if count == len(df):
+        if df[col].nunique() == len(df):
             warnings.append("Atrybut '" + col + "' ma inną wartość w każdym wierszu, wygląda jak identyfikator.")
-        elif count > MAX_VALUES:
-            warnings.append("Atrybut '" + col + "' ma " + str(count) + " różnych wartości. ID3 najlepiej działa na atrybutach z niewielką liczbą wartości.")
-    if df[decision_col].nunique() > MAX_VALUES:
-        warnings.append("Kolumna decyzji ma " + str(df[decision_col].nunique()) + " różnych wartości. Sprawdź, czy wybrano właściwą kolumnę.")
     return warnings
 
 
 def check_consistency(df, decision_col, condition_cols):
-    #dwa wiersze maja to samo i różne decyzji
+    #dwa wiersze maja to samo but różne decyzji
     rows = df.to_dict("records")
     names = df.index.tolist()
     conflicts = []
