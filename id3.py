@@ -76,12 +76,15 @@ def get_condition_cols(df, decision_col):
     return condition_cols
 
 
-def get_warnings(df, condition_cols):
-    warnings = []
+def get_errors(df, condition_cols, consistency):
+    errors = []
+    if not consistency["is_consistent"]:
+        errors.append("Tablica jest niespójna. Wierszy z takimi samymi warunkami mają różne decyzje. Liczba konfliktów: " + str(len(consistency["conflicts"])))
+
     for col in condition_cols:
         if df[col].nunique() == len(df):
-            warnings.append("Atrybut '" + col + "' ma inną wartość w każdym wierszu, wygląda jak identyfikator.")
-    return warnings
+            errors.append("Atrybut '" + col + "' ma inną wartość w każdym wierszu, wygląda jak identyfikator.")
+    return errors
 
 
 def check_consistency(df, decision_col, condition_cols):

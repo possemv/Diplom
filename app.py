@@ -1,9 +1,7 @@
 import os
-
 import pandas as pd
 from flask import Flask, render_template, request
 from werkzeug.utils import secure_filename
-
 import db
 import id3 as logic
 
@@ -19,8 +17,8 @@ try:
 except Exception as e:
     print('Brak połączenia z bazą danych:', e)
 
+#zwraca tabeli baza danych
 def get_recent():
-    #zwraca (lista ostatnich tabel, czy był błąd bazy)
     try:
         return db.get_recent_tables(6), False
     except Exception as e:
@@ -42,8 +40,8 @@ def make_table_html(df, has_index):
         table = df
     return table.to_html(classes='data-table', border=0, index=False)
 
+#wczytaj plik i sprawdz tablicę i errory
 def load_and_check(filename, has_index):
-    #wczytuje plik i sprawdza tablicę, zwraca (df, problemy)
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     if not os.path.isfile(file_path):
         return None, ['Nie znaleziono pliku. Wgraj go ponownie.']
@@ -68,8 +66,8 @@ def show_select_page(filename, has_index, df, problems=None):
         problems=problems,
     )
 
+#jeśli baza nie działa - tylko wypisujemy błąd w konsoli
 def save_to_history(filename, has_index, decision_col):
-    #jeśli baza nie działa, analiza i tak ma się udać - tylko wypisujemy błąd w konsoli
     try:
         db.save_table(filename, has_index, decision_col)
     except Exception as e:
@@ -114,6 +112,13 @@ def run_analysis(filename, has_index, decision_col):
 
     df = df.astype(str)
 
+    #gdzy nie ma bledow
+    tree_html = None
+    build_log = None
+    tree_stats = None
+    rules = None
+    stats = None
+
     try:
         #kolumny warunkowe
         condition_cols = logic.get_condition_cols(df, decision_col)
@@ -121,26 +126,25 @@ def run_analysis(filename, has_index, decision_col):
         consistency = logic.check_consistency(df, decision_col, condition_cols)
         #info tabl
         info = logic.table_info(df, decision_col)
-        #drzewo id3
-        tree, build_log = logic.build_tree(df, condition_cols, decision_col)
-        #reguły
-        rules = logic.generate_rules(tree)
-        #staty reguł
-        stats = logic.rule_statistics(rules)
-        #staty drzewa
-        tree_stats = logic.tree_statistics(tree)
-        #drzewo
-        tree_html = "<ul class='tree'>" + logic.tree_to_html(tree) + "</ul>"
-        #ostrzeżenia
-        warnings = logic.get_warnings(df, condition_cols)
-        if not consistency['is_consistent']:
-            warnings.append('Tablica jest niespójna, drzewo może dawać niejednoznaczne decyzje.')
+        #errory
+        errors = logic.get_errors(df, condition_cols, consistency)
+        if len(errors) == 0:
+            #drzewo id3
+            tree, build_log = logic.build_tree(df, condition_cols, decision_col)
+            #reguły
+            rules = logic.generate_rules(tree)
+            #staty reguł
+            stats = logic.rule_statistics(rules)
+            #staty drzewa
+            tree_stats = logic.tree_statistics(tree)
+            #drzewo
+            tree_html = "<ul class='tree'>" + logic.tree_to_html(tree) + "</ul>"
     except Exception:
         app.logger.exception('Błąd podczas analizy')
         return show_select_page(filename, has_index, df,
                                 ['Wystąpił błąd podczas analizy. Spróbuj wybrać inną kolumnę decyzji.'])
-
-    save_to_history(filename, has_index, decision_col)
+    if len(errors) ==0:
+        save_to_history(filename, has_index, decision_col)
 
     return render_template(
         'wyniki.html',
@@ -154,7 +158,7 @@ def run_analysis(filename, has_index, decision_col):
         tree_stats=tree_stats,
         rules=rules,
         stats=stats,
-        warnings=warnings,
+        errors=errors,
     )
 
 @app.route('/analiza', methods=['POST'])

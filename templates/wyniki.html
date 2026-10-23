@@ -10,22 +10,22 @@
         <a href="{{url_for('index')}}" class="powrot">&larr; wgraj inny plik</a>
         <h1>Wyniki analizy: {{filename}}</h1>
 
-        {% if warnings %}
-            <div class="alert-warning">
-                <strong>Uwaga:</strong>
+        {% if errors %}
+            <div class="alert-error">
+                <strong>Analiza została zatrzymana, drzewo i reguły nie zostały zbudowane. Tablica zawiera błędy:</strong>
                 <ul>
-                    {% for w in warnings %}
-                        <li>{{ w }}</li>
+                    {% for e in errors %}
+                        <li>{{ e }}</li>
                     {% endfor %}
                 </ul>
             </div>
+        {% else %}
+            <div class="tabs">
+                <button class="tab-btn active" onclick="pokazZakladke('tablica', this)">Tablica</button>
+                <button class="tab-btn" onclick="pokazZakladke('drzewo', this)">Drzewo</button>
+                <button class="tab-btn" onclick="pokazZakladke('reguly', this)">Reguły</button>
+            </div>
         {% endif %}
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="pokazZakladke('tablica', this)">Tablica</button>
-            <button class="tab-btn" onclick="pokazZakladke('drzewo', this)">Drzewo</button>
-            <button class="tab-btn" onclick="pokazZakladke('reguly', this)">Reguły</button>
-        </div>
 
         <div id="tablica" class="tab-content" style="display: block;">
             <h2>Wczytana tablica decyzyjna</h2>
@@ -39,10 +39,13 @@
             {% else %}
                 <p class="error">Tablica nie jest spójna. Znaleziono {{consistency.conflicts | length }} konflikt(ów):</p>
                 <ul>
-                    {% for c in consistency.conflicts %}
+                    {% for c in consistency.conflicts[:20] %}
                         <li>Wiersze {{c.a}} i {{c.b}}: {{c.row1}} vs {{c.row2}}</li>
                     {% endfor %}
                 </ul>
+                {% if consistency.conflicts | length > 20 %}
+                    <p>Pokazano pierwsze 20 konfliktów.</p>
+                {% endif %}
             {% endif %}
 
             <h2>Informacje o tablicy</h2>
@@ -64,6 +67,7 @@
             </ul>
         </div>
 
+        {% if not errors %}
         <div id="drzewo" class="tab-content" style="display: none;">
             <h2>Drzewo decyzyjne</h2>
             {{ tree_html | safe }}
@@ -89,6 +93,7 @@
             <p>Średnia długość: {{stats.avg_length}}</p>
             <p>Maksymalna długość: {{stats.max_length}}</p>
         </div>
+        {% endif %}
     </div>
 
     <script>
