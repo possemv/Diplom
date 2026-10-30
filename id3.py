@@ -189,7 +189,7 @@ def build_id3(data, attributes, decision_col, log=None):
         return {"is_leaf": True, "decision": decision}
 
     best_attribute, gain = choose_best_attribute(data, attributes, decision_col)
-    log.append("[WĘZEŁ] Atrybut: " + best_attribute + " (zysk = " + str(round(gain, 4)) + ")")
+    log.append("[WĘZEŁ] Atrybut: " + best_attribute + " (przyrost informacji = " + str(round(gain, 4)) + ")")
 
     node = {"is_leaf": False, "attribute": best_attribute, "branches": {}}
 

@@ -1,0 +1,10 @@
+.git
+.github
+.env
+.venv
+venv
+uploads
+tests
+__pycashe__
+*.pem
+.idea

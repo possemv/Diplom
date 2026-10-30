@@ -1,0 +1,88 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: diplom
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      DB_HOST: localhost
+      DB_USER: postgres
+      DB_PASSWORD: test
+      DB_NAME: diplom
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Instalacja zależności
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Testy jednostkowe i integracyjne
+        run: pytest tests --ignore=tests/e2e -v
+      - name: Start aplikacji do testu e2e
+        run: |
+          gunicorn -b 127.0.0.1:5000 app:app &
+          sleep 4
+      - name: Przeglądarka dla Playwright
+        run: playwright install --with-deps chromium
+      - name: Test e2e
+        run: pytest tests/e2e -v
+        env:
+          BASE_URL: http://127.0.0.1:5000
+
+  build:
+    needs: test
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login właściciela małymi literami
+        run: echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ env.OWNER }}/diplom-web:latest
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      VM_HOST: ${{ secrets.VM_HOST }}
+      VM_USER: ${{ secrets.VM_USER }}
+      SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wdrożenie na maszynę wirtualną Azure
+        run: |
+          install -m 600 /dev/null key.pem
+          echo "$SSH_KEY" > key.pem
+          OPTS="-i key.pem -o StrictHostKeyChecking=accept-new"
+          scp $OPTS docker-compose.yml Caddyfile "$VM_USER@$VM_HOST:diplom/"
+          ssh $OPTS "$VM_USER@$VM_HOST" "cd ~/diplom && docker compose pull web && docker compose up -d"
