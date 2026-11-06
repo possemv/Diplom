@@ -76,13 +76,14 @@ jobs:
     env:
       VM_HOST: ${{ secrets.VM_HOST }}
       VM_USER: ${{ secrets.VM_USER }}
-      SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+      SSH_KEY_B64: ${{ secrets.VM_SSH_KEY_B64 }}
     steps:
       - uses: actions/checkout@v4
       - name: Wdrożenie na maszynę wirtualną Azure
         run: |
           install -m 600 /dev/null key.pem
-          printf '%s\n' "$SSH_KEY" | tr -d '\r' > key.pem
+          echo "$SSH_KEY_B64" | base64 -d > key.pem
+          ssh-keygen -y -f key.pem > /dev/null
           OPTS="-i key.pem -o StrictHostKeyChecking=accept-new"
           scp $OPTS docker-compose.yml Caddyfile "$VM_USER@$VM_HOST:diplom/"
           ssh $OPTS "$VM_USER@$VM_HOST" "cd ~/diplom && docker compose pull web && docker compose up -d"
