@@ -82,7 +82,7 @@ jobs:
       - name: Wdrożenie na maszynę wirtualną Azure
         run: |
           install -m 600 /dev/null key.pem
-          echo "$SSH_KEY" > key.pem
+          printf '%s\n' "$SSH_KEY" | tr -d '\r' > key.pem
           OPTS="-i key.pem -o StrictHostKeyChecking=accept-new"
           scp $OPTS docker-compose.yml Caddyfile "$VM_USER@$VM_HOST:diplom/"
           ssh $OPTS "$VM_USER@$VM_HOST" "cd ~/diplom && docker compose pull web && docker compose up -d"
