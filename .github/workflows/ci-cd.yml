@@ -81,8 +81,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Wdrożenie na maszynę wirtualną Azure
         run: |
-          install -m 600 /dev/null key.pem
-          echo "$SSH_KEY_B64" | base64 -d > key.pem
+          echo "Dlugosc sekretu: ${#SSH_KEY_B64}"
+          echo "$SSH_KEY_B64" | tr -d ' \r\n' | base64 -d | tr -d '\r' > key.tmp
+          printf '%s\n' "$(cat key.tmp)" > key.pem
+          chmod 600 key.pem
+          echo "Pierwsza linia klucza: $(head -1 key.pem)"
           ssh-keygen -y -f key.pem > /dev/null
           OPTS="-i key.pem -o StrictHostKeyChecking=accept-new"
           scp $OPTS docker-compose.yml Caddyfile "$VM_USER@$VM_HOST:diplom/"
