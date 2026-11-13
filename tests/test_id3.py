@@ -46,7 +46,7 @@ def test_consistency():
 
 def test_validate_table_empty_cells_and_size():
     d = pd.DataFrame({"A": ["x", None], "Decyzja": ["tak", "nie"]})
-    assert any("puste" in p for p in id3.validate_table(d, 1000))
+    assert any("puste" in p for p in id3.validate_table(d, 15000))
     full = pd.DataFrame({"A": ["x", "y"], "Decyzja": ["tak", "nie"]})
     assert any("za dużo" in p for p in id3.validate_table(full, 1))
 
@@ -72,7 +72,7 @@ def test_load_table_semicolon_with_index(tmp_path):
 def test_pipeline_on_pogoda_file():
     d = id3.load_table(str(DATA), True).astype(str)
     decision = d.columns[-1]
-    assert id3.validate_table(d, 1000) == []
+    assert id3.validate_table(d, 15000) == []
     cond = id3.get_condition_cols(d, decision)
     consistency = id3.check_consistency(d, decision, cond)
     assert id3.get_errors(d, cond, consistency) == []

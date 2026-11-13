@@ -10,7 +10,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-MAX_ROWS = 1000
+MAX_ROWS = 15000
 
 try:
     db.create_tables()

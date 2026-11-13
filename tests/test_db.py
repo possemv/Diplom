@@ -22,7 +22,7 @@ def clean():
     _cleanup()
 
 def _mine():
-    return [t for t in db.get_recent_tables(1000) if t["filename"].startswith(PREFIX)]
+    return [t for t in db.get_recent_tables(15000) if t["filename"].startswith(PREFIX)]
 
 def test_save_and_list():
     db.save_table(PREFIX + "a.csv", True, "Decyzja")
